@@ -19,4 +19,5 @@ export const RPCErrors = {
 
   // custom errors
   UNKNOWN_MESSAGE:   [-10000, 'Unknown message'],
+  REQUEST_TIMEOUT:   [-10001, 'Request timeout'],
 } as const

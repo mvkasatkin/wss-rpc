@@ -3,13 +3,15 @@ import { RPCClient, IRPCClientOptions } from './RPCClient'
 import { RPCEvent } from './RPCEvent'
 import { RPCError } from './RPCError'
 
-const port = 5002
+const port = 5005
 let serverData: ReturnType<typeof createServer>
 
-describe('Test client/server', () => {
+describe('Integration client/server', () => {
+  jest.useFakeTimers({ timerLimit: 1000 })
 
-  beforeEach(() => {
+  beforeEach(async () => {
     serverData = createServer()
+    await new Promise(r => serverData.server.on('listening', r))
   })
 
   afterEach(async () => {
@@ -179,12 +181,67 @@ describe('Test client/server', () => {
     expect(serverErrorCb).toHaveBeenLastCalledWith(expect.any(Error))
     expect(serverErrorCb.mock.lastCall[0].message).toBe('msg4')
   })
+
+  test('connection activity', async () => {
+    const { server } = serverData
+    const { client } = createClient()
+    await client.connected
+    const connection = server.getConnections()[0]
+    const activity1 = connection.lastActivity
+
+    const pingCb = jest.fn()
+    const pongCb = jest.fn()
+    client.ws?.on('ping', pingCb)
+    client.ws?.on('pong', pongCb)
+
+    client.ws?.ping('aaa')
+    await waitEvent(client.ws, 'pong', 500)
+    expect(pongCb).toBeCalledTimes(1)
+    expect(pongCb.mock.calls[0][0].toString()).toBe('aaa')
+    const activity2 = connection.lastActivity
+    expect(activity2).toBeGreaterThan(activity1)
+
+    connection.ws.ping('bbb')
+    await waitEvent(client.ws, 'ping', 500)
+    await waitEvent(connection.ws, 'pong', 500)
+    expect(pingCb).toBeCalledTimes(1)
+    expect(pingCb.mock.calls[0][0].toString()).toBe('bbb')
+    const activity3 = connection.lastActivity
+    expect(activity3).toBeGreaterThan(activity2)
+  })
+
+  test('connection keep alive', async () => {
+    const { server } = serverData
+    const { client } = createClient()
+    await client.connected
+    const connection = server.getConnections()[0]
+    const activity1 = connection.lastActivity
+
+    jest.runOnlyPendingTimers()
+    await waitEvent(connection.ws, 'pong', 500)
+    const activity2 = connection.lastActivity
+    expect(activity2).toBeGreaterThan(activity1)
+
+    jest.runOnlyPendingTimers()
+    await waitEvent(connection.ws, 'pong', 500)
+    const activity3 = connection.lastActivity
+    expect(activity3).toBeGreaterThan(activity2)
+  })
 })
 
-async function waitEvent (instance: any, eventName: string) {
-  return new Promise<any>(resolve => {
+async function waitEvent (instance: any, eventName: string, timeout = 0) {
+  const resultPromise = new Promise<any>(resolve => {
     instance.on(eventName, resolve, true)
   })
+
+  if (timeout > 0) {
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout')), timeout)
+    })
+    return Promise.race([resultPromise, timeoutPromise])
+  }
+
+  return resultPromise
 }
 
 async function delay (ms: number = 0): Promise<void> {

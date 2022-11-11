@@ -7,6 +7,7 @@ export class RPCConnection<State = unknown> {
   public readonly id: string
   public readonly ws: WebSocket
   public readonly state: State
+  public lastActivity = 0
 
   public constructor (ws: WebSocket, initialState: State) {
     this.id = nanoid()

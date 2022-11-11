@@ -11,11 +11,15 @@ export class RPCServer<State = unknown> {
   protected stateFactory: () => State
   protected eventEmitter = new EventEmitter()
   protected connections: Map<string, RPCConnection<State>> = new Map()
+  protected keepAlive: Map<string, NodeJS.Timer> = new Map()
   protected methods: Map<string, IRPCMethod<State>> = new Map()
 
   public constructor (options: IRPCServerOptions<State>) {
-    this.options = options
-    this.stateFactory = options.stateFactory
+    this.options = {
+      keepAlive: 300000,
+      ...options,
+    }
+    this.stateFactory = this.options.stateFactory
     this.wss = this.options.wss ?? this.createWebsocketServer()
     this.handleWssListening()
     this.handleWssConnection()
@@ -72,14 +76,16 @@ export class RPCServer<State = unknown> {
     this.wss.on('connection', (ws) => {
       const connection = new RPCConnection(ws, this.stateFactory())
       this.connections.set(connection.id, connection)
-      this.handleConnectionMessage(ws, connection)
       this.handleConnectionClose(ws, connection)
+      this.handleConnectionMessage(ws, connection)
+      this.handleConnectionKeepAlive(ws, connection)
       this.emit('connect', connection)
     })
   }
 
   protected handleConnectionMessage (ws: WebSocket, connection: RPCConnection<State>) {
     ws.on('message', async (data) => {
+      connection.lastActivity = Date.now()
       let request: RPCRequest | null = null
 
       try {
@@ -122,9 +128,23 @@ export class RPCServer<State = unknown> {
 
   protected handleConnectionClose (ws: WebSocket, connection: RPCConnection) {
     ws.once('close', () => {
+      clearInterval(this.keepAlive.get(connection.id))
+      this.keepAlive.delete(connection.id)
       this.connections.delete(connection.id)
       this.emit('disconnect', connection)
     })
+  }
+
+  protected handleConnectionKeepAlive (ws: WebSocket, connection: RPCConnection) {
+    const updateActivity = () => connection.lastActivity = Date.now()
+    ws.on('pong', updateActivity)
+    ws.on('ping', updateActivity)
+
+    if (this.options.keepAlive) {
+      this.keepAlive.set(connection.id, setInterval(() => {
+        connection.ws.ping()
+      }, this.options.keepAlive))
+    }
   }
 
   protected handleWssError () {
@@ -154,6 +174,7 @@ export type IRPCMethod<State> = (params: any, connection: RPCConnection<State>) 
 export interface IRPCServerOptions<State> extends ServerOptions {
   wss?: WebSocketServer
   encoding?: BufferEncoding
+  keepAlive?: number
   stateFactory: () => State
 }
 
