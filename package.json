@@ -9,7 +9,7 @@
   "scripts": {
     "build": "rollup -c",
     "test": "jest --runInBand --detectOpenHandles --verbose",
-    "coverage": "jest --runInBand --detectOpenHandles --coverage"
+    "coverage": "jest --runInBand --detectOpenHandles --coverage && coveralls < coverage/lcov.info"
   },
   "engines": {
     "node": ">=14"
@@ -35,6 +35,7 @@
     "@types/ws": "^8.5.3",
     "@typescript-eslint/eslint-plugin": "^5.38.1",
     "@typescript-eslint/parser": "^5.38.1",
+    "coveralls": "^3.1.1",
     "eslint": "^8.24.0",
     "eslint-plugin-align-import": "^1.0.0",
     "eslint-plugin-jsdoc": "^39.3.6",
