@@ -7,9 +7,9 @@ const port = 5005
 let serverData: ReturnType<typeof createServer>
 
 describe('Integration client/server', () => {
-  jest.useFakeTimers({ timerLimit: 1000 })
 
   beforeEach(async () => {
+    jest.useRealTimers()
     serverData = createServer()
     await new Promise(r => serverData.server.on('listening', r))
   })
@@ -211,6 +211,7 @@ describe('Integration client/server', () => {
   })
 
   test('connection keep alive', async () => {
+    jest.useFakeTimers({ timerLimit: 1000 })
     const { server } = serverData
     const { client } = createClient()
     await client.connected

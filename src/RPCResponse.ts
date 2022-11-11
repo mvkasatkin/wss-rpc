@@ -2,11 +2,11 @@ import { RPCRequest } from './RPCRequest'
 import { RPCErrors, RPCError } from './RPCError'
 
 export class RPCResponse {
-  public readonly id: ID
+  public readonly id: IRPCID
   public readonly result?: any
-  public readonly error?: IError
+  public readonly error?: IRPCError
 
-  public constructor (params: { id: ID, result?: any, error?: IError }) {
+  public constructor (params: { id: IRPCID, result?: any, error?: IRPCError }) {
     this.id = params.id
     if (params.error) {
       this.error = params.error
@@ -36,16 +36,16 @@ export class RPCResponse {
   }
 }
 
-export type ID = string | number | null
+export type IRPCID = string | number | null
 
 export interface IRPCResponseObject {
   jsonrpc: '2.0'
-  id: ID
+  id: IRPCID
   result?: any
-  error?: IError
+  error?: IRPCError
 }
 
-export interface IError {
+export interface IRPCError {
   code: number
   message: string
   data?: unknown

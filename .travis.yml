@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+  - lts/*
+before_script:
+  - npm run coverage
+script:
+  - npm install codeclimate-test-reporter
+after_script:
+  - cat coverage/lcov.info | codeclimate-test-reporter
+env:
+  global:
+    - secure: "UomXCF2ZpVMKG/77bOx2ixp8/tCD1oes1vG02oc...="
