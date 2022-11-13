@@ -2,19 +2,11 @@ export class EventEmitter {
   protected registry: Map<string | Symbol, IItem[]> = new Map()
 
   public all (listener: IListener) {
-    if (!this.registry.has(all)) {
-      this.registry.set(all, [])
-    }
-    this.registry.get(all)!.push({ listener })
-    return () => this.off(all, listener)
+    return this.registerListener(all, listener)
   }
 
   public on (event: string, listener: IListener, once?: boolean) {
-    if (!this.registry.has(event)) {
-      this.registry.set(event, [])
-    }
-    this.registry.get(event)!.push({ listener, once })
-    return () => this.off(event, listener)
+    return this.registerListener(event, listener, once)
   }
 
   public off (event?: string | Symbol, listener?: IListener) {
@@ -37,6 +29,14 @@ export class EventEmitter {
         this.off(event, item.listener)
       }
     }
+  }
+
+  protected registerListener (event: string | Symbol, listener: IListener, once?: boolean) {
+    if (!this.registry.has(event)) {
+      this.registry.set(event, [])
+    }
+    this.registry.get(event)!.push({ listener, once })
+    return () => this.off(event, listener)
   }
 }
 

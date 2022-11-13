@@ -2,10 +2,12 @@
   "name": "wss-rpc2",
   "version": "0.1.3",
   "description": "WebSocket Server and Client implementation of the JSON RPC-2 spec",
+  "repository": "github:mvkasatkin/wss-rpc2",
   "source": "src/index.ts",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "build": "rollup -c",
     "test": "jest --runInBand --detectOpenHandles --verbose",

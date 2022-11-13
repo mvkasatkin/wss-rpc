@@ -143,6 +143,10 @@ describe('Integration client/server', () => {
     server.registerMethod('throw_error', () => { throw new Error('msg4') })
     await client.connected
 
+    expect(() => {
+      server.registerMethod('throw_error', () => {})
+    }).toThrow('already registered')
+
     client.ws?.send('parse error message')
     await waitEvent(client, 'response')
     expect(clientErrorCb).toBeCalledTimes(1)
