@@ -1,4 +1,4 @@
-import { WebSocket, ClientOptions, RawData } from 'isomorphic-ws'
+import WebSocket, { ClientOptions, ErrorEvent, MessageEvent } from 'isomorphic-ws'
 import { IRPCResponseObject, RPCResponse } from './RPCResponse'
 import { EventEmitter } from './EventEmitter'
 import { RPCError, RPCErrors } from './RPCError'
@@ -52,23 +52,23 @@ export class RPCClient {
     this.resetReadyState()
     this.resetListeners()
     this.clientState = 'connecting'
-    this.ws = new WebSocket(this.address, this.options)
-    this.ws.on('open', this.onOpen)
-    this.ws.on('message', this.onMessage)
-    this.ws.on('error', this.onError)
-    this.ws.on('close', this.onClose)
-    this.ws.on('ping', this.onPing)
+    this.ws = new WebSocket(this.address)
+    this.ws.addEventListener('open', this.onOpen)
+    this.ws.addEventListener('message', this.onMessage)
+    this.ws.addEventListener('error', this.onError)
+    this.ws.addEventListener('close', this.onClose, { once: true })
     return this.ready
   }
 
   public disconnect () {
+    const { ws } = this
     this.clientState = 'stopped'
     clearInterval(this.cleanupTimer)
     this.reconnect.stop()
-    if (this.ws) {
+    if (ws) {
       return new Promise(resolve => {
-        this.ws?.once('close', resolve)
-        this.ws?.close()
+        ws.addEventListener('close', resolve, { once: true })
+        ws.close()
       })
     }
     return Promise.resolve()
@@ -132,11 +132,10 @@ export class RPCClient {
   }
 
   protected resetListeners () {
-    this.ws?.off('open', this.onOpen)
-    this.ws?.off('message', this.onMessage)
-    this.ws?.off('error', this.onError)
-    this.ws?.off('close', this.onClose)
-    this.ws?.off('ping', this.onPing)
+    this.ws?.removeEventListener('open', this.onOpen)
+    this.ws?.removeEventListener('message', this.onMessage)
+    this.ws?.removeEventListener('error', this.onError)
+    this.ws?.removeEventListener('close', this.onClose)
   }
 
   protected onOpen = () => {
@@ -146,8 +145,8 @@ export class RPCClient {
     this.emit('connect', null)
   }
 
-  protected onMessage = (data: RawData) => {
-    const message = data.toString(this.options.encoding ?? 'utf8')
+  protected onMessage = (event: MessageEvent) => {
+    const message = event.data.toString(this.options.encoding ?? 'utf8')
     try {
       const object = JSON.parse(message)
       if (object.jsonrpc) {
@@ -203,8 +202,8 @@ export class RPCClient {
     }
   }
 
-  protected onError = (e: Error) => {
-    this.emitError(e)
+  protected onError = (event: ErrorEvent) => {
+    this.emitError(event.error)
   }
 
   protected onClose = () => {
@@ -214,10 +213,6 @@ export class RPCClient {
     } else {
       this.reconnect.start()
     }
-  }
-
-  protected onPing = (data: any) => {
-    this.ws?.pong(data)
   }
 
   protected emitError = (e: unknown) => e && this.emit('error', e)

@@ -1,6 +1,6 @@
 import { RPCError, RPCErrors } from './RPCError'
 
-export class RPCRequest {
+class RPCRequest {
   public readonly id?: string | number
   public readonly method: string
   public readonly params?: IRPCParams
@@ -62,11 +62,13 @@ export class RPCRequest {
   }
 }
 
-export type IRPCParams = { [key: string]: unknown } | unknown[]
+type IRPCParams = { [key: string]: unknown } | unknown[]
 
-export interface IRPCRequestObject {
+interface IRPCRequestObject {
   jsonrpc: '2.0'
   id?: string | number
   method: string
   params?: IRPCParams
 }
+
+export { RPCRequest, IRPCParams, IRPCRequestObject }

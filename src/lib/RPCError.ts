@@ -1,4 +1,4 @@
-export class RPCError extends Error {
+class RPCError extends Error {
   public readonly code: number
   public readonly data?: unknown
 
@@ -9,7 +9,7 @@ export class RPCError extends Error {
   }
 }
 
-export const RPCErrors = {
+const RPCErrors = {
   // json-rpc2 errors
   PARSE_ERROR:      [-32700, 'Parse error'],
   INVALID_REQUEST:  [-32600, 'Invalid Request'],
@@ -21,3 +21,5 @@ export const RPCErrors = {
   UNKNOWN_MESSAGE:   [-10000, 'Unknown message'],
   REQUEST_TIMEOUT:   [-10001, 'Request timeout'],
 } as const
+
+export { RPCError, RPCErrors }

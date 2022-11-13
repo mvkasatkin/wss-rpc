@@ -1,4 +1,4 @@
-export class RPCEvent {
+class RPCEvent {
   public readonly event: string
   public readonly params?: any
 
@@ -15,7 +15,9 @@ export class RPCEvent {
   }
 }
 
-export interface IRPCEventObject {
+interface IRPCEventObject {
   event: string
   params?: any
 }
+
+export { RPCEvent, IRPCEventObject }

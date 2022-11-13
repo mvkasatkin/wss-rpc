@@ -1,7 +1,7 @@
 import { RPCRequest } from './RPCRequest'
 import { RPCErrors, RPCError } from './RPCError'
 
-export class RPCResponse {
+class RPCResponse {
   public readonly id: IRPCID
   public readonly result?: any
   public readonly error?: IRPCError
@@ -36,17 +36,19 @@ export class RPCResponse {
   }
 }
 
-export type IRPCID = string | number | null
+type IRPCID = string | number | null
 
-export interface IRPCResponseObject {
+interface IRPCResponseObject {
   jsonrpc: '2.0'
   id: IRPCID
   result?: any
   error?: IRPCError
 }
 
-export interface IRPCError {
+interface IRPCError {
   code: number
   message: string
   data?: unknown
 }
+
+export { RPCResponse, IRPCID, IRPCResponseObject, IRPCError }

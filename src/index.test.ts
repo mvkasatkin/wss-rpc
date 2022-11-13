@@ -1,7 +1,7 @@
-import { RPCServer, IRPCServerOptions } from './RPCServer'
-import { RPCClient, IRPCClientOptions } from './RPCClient'
-import { RPCEvent } from './RPCEvent'
-import { RPCError } from './RPCError'
+import { RPCServer, IRPCServerOptions } from './lib/RPCServer'
+import { RPCClient, IRPCClientOptions } from './lib/RPCClient'
+import { RPCEvent } from './lib/RPCEvent'
+import { RPCError } from './lib/RPCError'
 
 const port = 5005
 let serverData: ReturnType<typeof createServer>

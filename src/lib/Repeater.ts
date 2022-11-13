@@ -1,7 +1,7 @@
 const DEFAULT_LIMIT = 1000
 const DEFAULT_INTERVALS = [1000]
 
-export class Repeater {
+class Repeater {
   public readonly options: IRepeaterOptions
   public finished: Promise<void> = Promise.resolve()
   protected finishResolver = () => {}
@@ -56,9 +56,11 @@ export class Repeater {
   }
 }
 
-export interface IRepeaterOptions {
+interface IRepeaterOptions {
   callback: () => void
   onLimit?: () => void
   intervals?: number[]
   limit?: number
 }
+
+export { Repeater, IRepeaterOptions }

@@ -1,11 +1,11 @@
-import { WebSocketServer, WebSocket, ServerOptions } from 'isomorphic-ws'
+import WebSocket, { WebSocketServer, ServerOptions } from 'isomorphic-ws'
 import { RPCRequest } from './RPCRequest'
 import { RPCResponse } from './RPCResponse'
 import { EventEmitter } from './EventEmitter'
 import { RPCConnection } from './RPCConnection'
 import { RPCError, RPCErrors } from './RPCError'
 
-export class RPCServer<State = unknown> {
+class RPCServer<State = unknown> {
   public readonly wss: WebSocketServer
   public readonly options: IRPCServerOptions<State>
   protected stateFactory: () => State
@@ -169,19 +169,21 @@ export class RPCServer<State = unknown> {
   private emitError = (e: unknown) => this.emit('error', e)
 }
 
-export type IRPCMethod<State> = (params: any, connection: RPCConnection<State>) => any
+type IRPCMethod<State> = (params: any, connection: RPCConnection<State>) => any
 
-export interface IRPCServerOptions<State> extends ServerOptions {
+interface IRPCServerOptions<State> extends ServerOptions {
   wss?: WebSocketServer
   encoding?: BufferEncoding
   keepAlive?: number
   stateFactory: () => State
 }
 
-export interface IRPCServerEvents {
+interface IRPCServerEvents {
   listening: null
   connect: RPCConnection
   disconnect: RPCConnection
   error: unknown
   close: null
 }
+
+export { RPCServer, IRPCServerOptions, IRPCMethod, IRPCServerEvents }

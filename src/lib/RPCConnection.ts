@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid'
-import { WebSocket } from 'ws'
+import WebSocket from 'isomorphic-ws'
 import { RPCResponse } from './RPCResponse'
 import { RPCEvent } from './RPCEvent'
 

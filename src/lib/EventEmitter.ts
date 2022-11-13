@@ -1,4 +1,4 @@
-export class EventEmitter {
+class EventEmitter {
   protected registry: Map<string | Symbol, IItem[]> = new Map()
 
   public all (listener: IListener) {
@@ -48,3 +48,5 @@ interface IItem {
   listener: IListener
   once?: boolean
 }
+
+export { EventEmitter }
