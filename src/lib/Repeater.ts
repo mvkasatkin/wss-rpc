@@ -42,8 +42,11 @@ class Repeater {
     }
 
     const delay = this.getDelay()
-    this.timeoutId = setTimeout(() => {
-      this.options.callback()
+    setTimeout(async () => {
+      const result = this.options.callback()
+      if (result instanceof Promise) {
+        await result
+      }
       this.counter += 1
       this.process()
     }, delay)
@@ -57,7 +60,7 @@ class Repeater {
 }
 
 interface IRepeaterOptions {
-  callback: () => void
+  callback: () => void | Promise<unknown>
   onLimit?: () => void
   intervals?: number[]
   limit?: number

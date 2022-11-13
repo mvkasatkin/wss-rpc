@@ -28,7 +28,7 @@ export class RPCClient {
       ...options,
     }
     this.reconnect = new Repeater({
-      callback: () => { this.connect().catch(this.emitError) },
+      callback: () => this.connect().catch(this.emitError),
       onLimit: () => { this.disconnect().catch(this.emitError) },
       intervals: this.options.reconnectIntervals,
       limit: this.options.reconnectLimit,
@@ -56,19 +56,22 @@ export class RPCClient {
     this.ws.addEventListener('open', this.onOpen)
     this.ws.addEventListener('message', this.onMessage)
     this.ws.addEventListener('error', this.onError)
-    this.ws.addEventListener('close', this.onClose, { once: true })
+    this.ws.addEventListener('close', this.onClose)
     return this.ready
   }
 
   public disconnect () {
-    const { ws } = this
     this.clientState = 'stopped'
     clearInterval(this.cleanupTimer)
     this.reconnect.stop()
-    if (ws) {
-      return new Promise(resolve => {
-        ws.addEventListener('close', resolve, { once: true })
-        ws.close()
+    if (this.ws) {
+      return new Promise<void>(resolve => {
+        const onClose = () => {
+          this.ws?.removeEventListener('close', onClose)
+          resolve()
+        }
+        this.ws?.addEventListener('close', onClose)
+        this.ws?.close()
       })
     }
     return Promise.resolve()
