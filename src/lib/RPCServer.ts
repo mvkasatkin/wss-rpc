@@ -186,4 +186,4 @@ interface IRPCServerEvents {
   close: null
 }
 
-export { RPCServer, IRPCServerOptions, IRPCMethod, IRPCServerEvents, ServerOptions }
+export { RPCServer, IRPCServerOptions, IRPCMethod, IRPCServerEvents }
