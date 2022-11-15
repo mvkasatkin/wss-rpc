@@ -8,11 +8,11 @@ Powered by [**ws**](https://www.npmjs.com/package/ws).
 [![Coverage Status](https://coveralls.io/repos/github/mvkasatkin/wss-rpc/badge.svg?branch=main)](https://coveralls.io/github/mvkasatkin/wss-rpc?branch=main)
 
 #### Basic functionality, according to the spec:
-- Method call **client** -> **server** (request/response)
-- Notifications **client** -> **server** (notification)
+- Method call: **client** -> **server** (request/response)
+- Notifications: **client** -> **server** (notification)
 
 #### Extended functionality:
-- Events **server** -> **client** (to all / to some / to a single client)
+- Events: **server** -> **client** (to all / to some / to a single client)
 - Reconnect and keep alive
 - Stateful client connection
 - The client works in both node and browser
@@ -47,6 +47,7 @@ See more [examples](#examples).
 
 ## RPCServer API
 
+---
 ### new RPCServer(options: IRPCServerOptions)
 
 Parameters:
@@ -56,20 +57,24 @@ Parameters:
     - `stateFactory?: () => State` - initial state factory of the connected client 
     - `...ServerOptions` (see ws library)
 
+---
 ### RPCServer.registerMethod(name: string, method: IRPCMethod): void
 
 Parameters:
 - `name: string` - name of the RPC method
 - `method: IRPCMethod` - RPC method function, see [types](#types)
 
+---
 ### RPCServer.getConnections(): RPCConnection[]
 
 Returns active [connection](#rpcconnection-api) instances.
 
+---
 ### RPCServer.close(): void
 
 Closes all active client's connections and stops the server.
 
+---
 ### RPCServer.on(eventName: string, listener: Function, once?: boolean): Function
 
 Subscribe a listener to the event. Returns unsubscribe function.\
@@ -84,6 +89,7 @@ Subscribe a listener to the event. Returns unsubscribe function.\
 
 ## RPCClient API
 
+---
 ### new RPCClient(address: string, options?: IRPCClientOptions)
 
 Parameters:
@@ -95,6 +101,7 @@ Parameters:
   - `reconnectLimit?: number` - 0 - unlimited, -1 - disabled (default: 1000)
   - `requestTimeout?: number` - request timeout (default: 10000)
 
+---
 ### RPCClient.state: 'init' | 'connecting' | 'connected' | 'stopped'
 
 Client connection state:
@@ -103,6 +110,7 @@ Client connection state:
 - `connected` - active connection
 - `stopped` - if disconnect() has been called or reconnectLimit is reached
 
+---
 ### RPCClient.connected: Promise\<void>
 
 Connection promise.
@@ -114,6 +122,7 @@ await client.connected
 // connected!
 ```
 
+---
 ### RPCClient.connect(): Promise\<void>
 
 Manual connect, if autoConnect = false
@@ -124,18 +133,22 @@ await client.connect()
 // connected!
 ```
 
+---
 ### RPCClient.disconnect(): Promise\<void>
 
 Disconnect and stop reconnect-observer.
 
+---
 ### RPCClient.call(method: string, params?: IRPCParams): Promise\<RPCResponse>
 
 Calls the method and waits for a response.
 
+---
 ### RPCClient.notify(method: string, params?: IRPCParams): void
 
 Notifies the server without waiting for a response.
 
+---
 ### RPCClient.on(eventName: string, listener: Function, once?: boolean): Function
 
 Subscribe a listener to the event. Returns unsubscribe function.\
@@ -150,22 +163,27 @@ Subscribe a listener to the event. Returns unsubscribe function.\
 
 ## RPCConnection <State = unknown> API
 
+---
 ### id: string
 
 Connection identifier
 
+---
 ### ws: WebSocket
 
 Browser WebSocket object (`isomorphic-ws` is used for the node client)
 
+---
 ### state?: State
 
 Some domain state of the connection
 
+---
 ### lastActivity: number = 0
 
 Last client activity timestamp
 
+---
 ### RPCConnection.emit (event: RPCEvent, cb?: (e: Error) => void)
 
 Emit an event to the client. Example:
