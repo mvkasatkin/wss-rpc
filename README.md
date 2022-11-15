@@ -285,11 +285,6 @@ interface IRpcLogin {
     }
   }
 }
-
-```
-
-Method generic:
-```typescript
 ```
 
 ## Examples
