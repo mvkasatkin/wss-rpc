@@ -47,7 +47,6 @@ See more [examples](#examples).
 
 ## RPCServer API
 
----
 ### new RPCServer(options: IRPCServerOptions)
 
 Parameters:
@@ -67,17 +66,17 @@ Parameters:
 ---
 ### RPCServer.getConnections(): RPCConnection[]
 
-Returns active [connection](#rpcconnection-api) instances.
+Returns active [connection](#rpcconnection-state--unknown-api) instances.
 
 ---
 ### RPCServer.close(): void
 
 Closes all active client's connections and stops the server.
 
----
+----
 ### RPCServer.on(eventName: string, listener: Function, once?: boolean): Function
 
-Subscribe a listener to the event. Returns unsubscribe function.\
+Subscribe a listener to the event. Returns unsubscribe function.
 
 #### RPCServer Events:
 - `listening (params: empty)` - on server start
@@ -89,7 +88,6 @@ Subscribe a listener to the event. Returns unsubscribe function.\
 
 ## RPCClient API
 
----
 ### new RPCClient(address: string, options?: IRPCClientOptions)
 
 Parameters:
@@ -97,7 +95,7 @@ Parameters:
 - `options: IRPCClientOptions`
   - `autoConnect?: boolean` - if false, then use `client.connect()` (default: true)
   - `reconnectIntervals?: number[]` - reconnect intervals sequence. Example: [1000, 1500, 2000] will wait between
-     reconnect: 1000ms, 1500ms, 2000ms, ..., 2000ms, until `reconnectLimit` (default: [1000] - every 1000 ms)
+     reconnect: 1000ms, 1500ms, 2000ms, ..., 2000ms, until `reconnectLimit` is reached (default: [1000] - every 1000 ms)
   - `reconnectLimit?: number` - 0 - unlimited, -1 - disabled (default: 1000)
   - `requestTimeout?: number` - request timeout (default: 10000)
 
@@ -107,14 +105,15 @@ Parameters:
 Client connection state:
 - `init` - before connect() has been called
 - `connecting` - connection or reconnection is in process
-- `connected` - active connection
+- `connected` - active connection state
 - `stopped` - if disconnect() has been called or reconnectLimit is reached
 
 ---
 ### RPCClient.connected: Promise\<void>
 
 Connection promise.
-However, it is not necessary to wait for a connection, because requests will be queued up until the connection.
+However, it is not necessary to wait for a connection,
+because requests will be queued up until the connection is established.
 
 ```typescript
 const client = new RPCClient()
@@ -136,7 +135,7 @@ await client.connect()
 ---
 ### RPCClient.disconnect(): Promise\<void>
 
-Disconnect and stop reconnect-observer.
+Disconnects and stops a reconnect-observer.
 
 ---
 ### RPCClient.call(method: string, params?: IRPCParams): Promise\<RPCResponse>
@@ -151,7 +150,7 @@ Notifies the server without waiting for a response.
 ---
 ### RPCClient.on(eventName: string, listener: Function, once?: boolean): Function
 
-Subscribe a listener to the event. Returns unsubscribe function.\
+Subscribe a listener to the event. Returns unsubscribe function.
 
 #### RPCClient Events:
 - `connect (params: empty)` - on connect
@@ -163,7 +162,6 @@ Subscribe a listener to the event. Returns unsubscribe function.\
 
 ## RPCConnection <State = unknown> API
 
----
 ### id: string
 
 Connection identifier
@@ -176,12 +174,12 @@ Browser WebSocket object (`isomorphic-ws` is used for the node client)
 ---
 ### state?: State
 
-Some domain state of the connection
+Domain state of the connection, if defined by IRPCServerOptions.stateFactory ([and State generic for TS](#typescript)).
 
 ---
 ### lastActivity: number = 0
 
-Last client activity timestamp
+Last client's activity timestamp
 
 ---
 ### RPCConnection.emit (event: RPCEvent, cb?: (e: Error) => void)
@@ -296,4 +294,5 @@ Method generic:
 
 ## Examples
 
-To be done
+To be done\
+[Also see tests](https://github.com/mvkasatkin/wss-rpc2/blob/main/src/index.test.ts)
