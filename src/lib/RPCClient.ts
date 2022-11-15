@@ -23,8 +23,9 @@ export class RPCClient {
     this.address = address
     this.options = {
       autoConnect: true,
-      requestTimeout: 10000,
-      cleanupInterval: 3000,
+      reconnectIntervals: [1000],
+      reconnectLimit: 1000,
+      requestTimeout: DEFAULT_REQUEST_TIMEOUT,
       ...options,
     }
     this.reconnect = new Repeater({
@@ -48,7 +49,6 @@ export class RPCClient {
   }
 
   public connect (): Promise<void> {
-    this.handleRequestQueueCleanup()
     this.resetReadyState()
     this.resetListeners()
     this.clientState = 'connecting'
@@ -113,14 +113,23 @@ export class RPCClient {
         const requestItem: IRequestItem = {
           request,
           resolve: (response) => {
+            clearTimeout(requestItem.timeout)
             this.requestQueue.delete(id)
             resolve(response)
           },
           reject: (e) => {
+            clearTimeout(requestItem.timeout)
             this.requestQueue.delete(id)
             reject(e)
           },
-          created: Date.now(),
+          timeout: setTimeout(() => {
+            if (this.requestQueue.has(id)) {
+              this.requestQueue.delete(id)
+              const error = new RPCError(...RPCErrors.REQUEST_TIMEOUT, { request })
+              const response = RPCResponse.fromError(error, request)
+              requestItem.resolve(response)
+            }
+          }, this.options.requestTimeout || DEFAULT_REQUEST_TIMEOUT)
         }
         this.requestQueue.set(id, requestItem)
         this.ws?.send(message, e => e && requestItem.reject(e))
@@ -191,20 +200,6 @@ export class RPCClient {
     this.emit('event', event)
   }
 
-  protected handleRequestQueueCleanup () {
-    const { requestTimeout, cleanupInterval } = this.options
-    if (requestTimeout && cleanupInterval) {
-      this.cleanupTimer = setInterval(() => {
-        const now = Date.now()
-        for (const [, requestItem] of this.requestQueue) {
-          if (now - requestItem.created > requestTimeout) {
-            requestItem.reject(new RPCError(...RPCErrors.REQUEST_TIMEOUT))
-          }
-        }
-      }, cleanupInterval)
-    }
-  }
-
   protected onError = (event: ErrorEvent) => {
     this.emitError(event.error)
   }
@@ -221,6 +216,8 @@ export class RPCClient {
   protected emitError = (e: unknown) => e && this.emit('error', e)
 }
 
+const DEFAULT_REQUEST_TIMEOUT = 10000
+
 export type IRPCClientState = 'init' | 'connecting' | 'connected' | 'stopped'
 
 export interface IRPCClientOptions extends ClientOptions {
@@ -228,12 +225,11 @@ export interface IRPCClientOptions extends ClientOptions {
   reconnectIntervals?: number[]
   reconnectLimit?: number // 0 = unlimited
   requestTimeout?: number
-  cleanupInterval?: number
   encoding?: BufferEncoding
 }
 
 export interface IRequestItem {
-  created: number
+  timeout: any
   request: RPCRequest
   resolve: (response: RPCResponse) => void
   reject: (e: unknown) => void

@@ -124,8 +124,8 @@ describe('Integration client/server', () => {
     await Promise.all([client1.connected, client2.connected])
 
     const [client1Connection, client2Connection] = server.getConnections()
-    client1Connection.state.a = 1
-    client2Connection.state.a = 2
+    client1Connection.state = { a: 1 }
+    client2Connection.state = { a: 2 }
     expect(client1Connection.state.a).toBe(1)
     expect(client2Connection.state.a).toBe(2)
   })
@@ -222,6 +222,27 @@ describe('Integration client/server', () => {
     const connection = server.getConnections()[0]
     const activity1 = connection.lastActivity
 
+    interface IRpcLogin {
+      request: {
+        login: string
+        password: string
+      }
+      response: {
+        user?: {
+          id: string
+          email: string
+        }
+      }
+    }
+    server.registerMethod<IRpcLogin['request'], IRpcLogin['response']>('login', async (params) => {
+      if (params.login && params.password) {
+        return {
+          user: { id: 'a', email: 'b' }
+        }
+      }
+      return {}
+    })
+
     jest.runOnlyPendingTimers()
     await waitEvent(connection.ws, 'pong', 500)
     const activity2 = connection.lastActivity
@@ -231,6 +252,23 @@ describe('Integration client/server', () => {
     await waitEvent(connection.ws, 'pong', 500)
     const activity3 = connection.lastActivity
     expect(activity3).toBeGreaterThan(activity2)
+  })
+
+  test('request timeout', async () => {
+    const { server } = serverData
+    const { client: client1 } = createClient({ requestTimeout: 10 })
+    const { client: client2 } = createClient({ requestTimeout: 1000 })
+    await Promise.all([client1.connected, client2.connected])
+    server.registerMethod('test', () => {
+      return new Promise(r => setTimeout(() => r(true), 20))
+    })
+
+    const [r1, r2] = await Promise.all([
+      client1.call('test'),
+      client2.call('test'),
+    ])
+    expect(r1.error).toEqual({ code: -10001, message: 'Request timeout' })
+    expect(r2.result).toEqual(true)
   })
 })
 
@@ -262,7 +300,6 @@ function createServer (opts?: Partial<IRPCServerOptions<any>>) {
   const server = new RPCServer({
     host: 'localhost',
     port,
-    stateFactory: () => ({}),
     ...opts,
   })
   server.on('connect', events.connect)

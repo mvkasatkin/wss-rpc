@@ -1,5 +1,5 @@
 import WebSocket, { WebSocketServer, ServerOptions } from 'isomorphic-ws'
-import { RPCRequest } from './RPCRequest'
+import { IRPCParams, RPCRequest } from './RPCRequest'
 import { RPCResponse } from './RPCResponse'
 import { EventEmitter } from './EventEmitter'
 import { RPCConnection } from './RPCConnection'
@@ -8,18 +8,17 @@ import { RPCError, RPCErrors } from './RPCError'
 class RPCServer<State = unknown> {
   public readonly wss: WebSocketServer
   public readonly options: IRPCServerOptions<State>
-  protected stateFactory: () => State
+  protected stateFactory?: () => State
   protected eventEmitter = new EventEmitter()
   protected connections: Map<string, RPCConnection<State>> = new Map()
   protected keepAlive: Map<string, NodeJS.Timer> = new Map()
-  protected methods: Map<string, IRPCMethod<State>> = new Map()
+  protected methods: Map<string, IRPCMethod<any, any, State>> = new Map()
 
   public constructor (options: IRPCServerOptions<State>) {
     this.options = {
       keepAlive: 300000,
       ...options,
     }
-    this.stateFactory = this.options.stateFactory
     this.wss = this.options.wss ?? this.createWebsocketServer()
     this.handleWssListening()
     this.handleWssConnection()
@@ -28,7 +27,7 @@ class RPCServer<State = unknown> {
     this.handleProcessExit()
   }
 
-  public registerMethod (name: string, method: IRPCMethod<State>) {
+  public registerMethod <Req extends IRPCParams = any, Res = any>(name: string, method: IRPCMethod<Req, Res, State>) {
     if (this.methods.has(name)) {
       throw new Error('A method with the same name is already registered')
     }
@@ -74,7 +73,7 @@ class RPCServer<State = unknown> {
 
   protected handleWssConnection () {
     this.wss.on('connection', (ws) => {
-      const connection = new RPCConnection(ws, this.stateFactory())
+      const connection = new RPCConnection(ws, this.options.stateFactory?.())
       this.connections.set(connection.id, connection)
       this.handleConnectionClose(ws, connection)
       this.handleConnectionMessage(ws, connection)
@@ -169,13 +168,14 @@ class RPCServer<State = unknown> {
   private emitError = (e: unknown) => this.emit('error', e)
 }
 
-type IRPCMethod<State> = (params: any, connection: RPCConnection<State>) => any
+type IRPCMethod<Req extends IRPCParams = any, Res = any, State = any>
+  = (params: Req, connection: RPCConnection<State>) => Res | Promise<Res>
 
 interface IRPCServerOptions<State> extends ServerOptions {
   wss?: WebSocketServer
   encoding?: BufferEncoding
   keepAlive?: number
-  stateFactory: () => State
+  stateFactory?: () => State
 }
 
 interface IRPCServerEvents {

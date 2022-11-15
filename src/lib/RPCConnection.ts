@@ -6,10 +6,10 @@ import { RPCEvent } from './RPCEvent'
 export class RPCConnection<State = unknown> {
   public readonly id: string
   public readonly ws: WebSocket
-  public readonly state: State
+  public state?: State
   public lastActivity = 0
 
-  public constructor (ws: WebSocket, initialState: State) {
+  public constructor (ws: WebSocket, initialState?: State) {
     this.id = nanoid()
     this.ws = ws
     this.state = initialState
