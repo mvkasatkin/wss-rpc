@@ -14,12 +14,12 @@ class RPCServer<State = unknown> {
   protected keepAlive: Map<string, NodeJS.Timer> = new Map()
   protected methods: Map<string, IRPCMethod<any, any, State>> = new Map()
 
-  public constructor (options: IRPCServerOptions<State>) {
+  public constructor (options: IRPCServerOptions<State>, onListening?: () => void) {
     this.options = {
       keepAlive: 300000,
       ...options,
     }
-    this.wss = this.options.wss ?? this.createWebsocketServer()
+    this.wss = this.options.wss ?? this.createWebsocketServer(onListening)
     this.handleWssListening()
     this.handleWssConnection()
     this.handleWssError()
@@ -51,8 +51,8 @@ class RPCServer<State = unknown> {
     this.eventEmitter.emit(eventName, data)
   }
 
-  protected createWebsocketServer () {
-    return new WebSocketServer(this.options)
+  protected createWebsocketServer (onListening?: () => void) {
+    return new WebSocketServer(this.options, onListening)
   }
 
   protected onBeforeClose () {
