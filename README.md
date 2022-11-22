@@ -251,7 +251,7 @@ interface IRPCError {
 Typescript support provides several useful features for typing request, responses and connection state.
 
 ```typescript
-import { RPCServer } from './RPCServer'
+import { RPCServer } from 'wss-rpc2'
 
 const server = new RPCServer<IAppUserState>({
   stateFactory: () => ({ authorized: false })
@@ -285,6 +285,14 @@ interface IRpcLogin {
     }
   }
 }
+```
+
+```typescript
+import { RPCClient } from 'wss-rpc2'
+
+const client = new RPCClient(url)
+const { error, result } = await client.call<{ user: IUser | null }>('login', { email, password })
+console.log(result?.user?.id)
 ```
 
 ## Examples

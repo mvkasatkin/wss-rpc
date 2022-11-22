@@ -1,10 +1,10 @@
 import { RPCRequest } from './RPCRequest'
 import { RPCErrors, RPCError } from './RPCError'
 
-class RPCResponse {
+class RPCResponse<T extends any = any> {
   public readonly id: IRPCID
-  public readonly result?: any
-  public readonly error?: IRPCError
+  public readonly result?: T | undefined
+  public readonly error?: IRPCError | undefined
 
   public constructor (params: { id: IRPCID, result?: any, error?: IRPCError }) {
     this.id = params.id
@@ -19,7 +19,7 @@ class RPCResponse {
     return !!this.error
   }
 
-  public toObject (): IRPCResponseObject {
+  public toObject (): IRPCResponseObject<T> {
     const { id, result, error } = this
     return this.isError()
       ? { jsonrpc: '2.0', id, error }
@@ -38,10 +38,10 @@ class RPCResponse {
 
 type IRPCID = string | number | null
 
-interface IRPCResponseObject {
+interface IRPCResponseObject<T extends any = any> {
   jsonrpc: '2.0'
   id: IRPCID
-  result?: any
+  result?: T
   error?: IRPCError
 }
 

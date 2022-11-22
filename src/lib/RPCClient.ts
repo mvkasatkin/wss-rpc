@@ -19,7 +19,7 @@ export class RPCClient {
   protected cleanupTimer: any
   protected id: number = 1
 
-  public constructor (address: string, options: IRPCClientOptions) {
+  public constructor (address: string, options?: IRPCClientOptions) {
     this.address = address
     this.options = {
       autoConnect: true,
@@ -77,7 +77,7 @@ export class RPCClient {
     return Promise.resolve()
   }
 
-  public async call (method: string, params?: IRPCParams): Promise<RPCResponse> {
+  public async call <T extends any = any>(method: string, params?: IRPCParams): Promise<RPCResponse<T>> {
     await this.ready
     const request = this.createRequest(method, params)
     this.emit('request', request)

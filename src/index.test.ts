@@ -80,8 +80,8 @@ describe('Integration client/server', () => {
     const { result: r1 } = await client.call('test.method1', [1, 2])
     expect(r1).toBe(3)
 
-    const { result: r2 } = await client.call('test.method2', { value1: 2, value2: 3 })
-    expect(r2.sum).toBe(5)
+    const { result: r2 } = await client.call<{ sum: number }>('test.method2', { value1: 2, value2: 3 })
+    expect(r2?.sum).toBe(5)
   })
 
   test('notify to server', async () => {
