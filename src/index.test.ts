@@ -270,6 +270,19 @@ describe('Integration client/server', () => {
     expect(r1.error).toEqual({ code: -10001, message: 'Request timeout' })
     expect(r2.result).toEqual(true)
   })
+
+  test('close connection', async () => {
+    const cbClose = jest.fn()
+    const cbError = jest.fn()
+    const { server } = serverData
+    const { client } = createClient()
+    await client.connected
+    server.on('error', cbError)
+    server.on('close', cbClose)
+    await server.close()
+    expect(cbClose).toBeCalledTimes(1)
+    expect(cbError).toBeCalledTimes(0)
+  })
 })
 
 async function waitEvent (instance: any, eventName: string, timeout = 0) {

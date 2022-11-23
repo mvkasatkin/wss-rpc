@@ -13,6 +13,7 @@ class RPCServer<State = unknown> {
   protected connections: Map<string, RPCConnection<State>> = new Map()
   protected keepAlive: Map<string, NodeJS.Timer> = new Map()
   protected methods: Map<string, IRPCMethod<any, any, State>> = new Map()
+  protected state: IServerState = 'active'
 
   public constructor (options: IRPCServerOptions<State>, onListening?: () => void) {
     this.options = {
@@ -24,7 +25,6 @@ class RPCServer<State = unknown> {
     this.handleWssConnection()
     this.handleWssError()
     this.handleWssClose()
-    this.handleProcessExit()
   }
 
   public registerMethod <Req extends IRPCParams = any, Res = any>(name: string, method: IRPCMethod<Req, Res, State>) {
@@ -38,9 +38,24 @@ class RPCServer<State = unknown> {
     return [...this.connections.values()]
   }
 
-  public close () {
+  public close (): Promise<void> {
+    if (this.state === 'stopped') {
+      return Promise.resolve()
+    }
+
+    this.state = 'stopped'
     this.onBeforeClose()
-    this.wss.close(this.emitError)
+    return new Promise((resolve, reject) => {
+      this.wss.close(e => {
+        this.wss.removeAllListeners()
+        if (e) {
+          this.emitError(e)
+          reject(e)
+        } else {
+          resolve()
+        }
+      })
+    })
   }
 
   public on <E extends keyof IRPCServerEvents>(eventName: E, listener: (data: IRPCServerEvents[E]) => void, once = false) {
@@ -159,14 +174,10 @@ class RPCServer<State = unknown> {
     })
   }
 
-  protected handleProcessExit () {
-    process.once('SIGINT', () => this.close())
-    process.once('SIGUSR1', () => this.close())
-    process.once('SIGUSR2', () => this.close())
-  }
-
   private emitError = (e: unknown) => this.emit('error', e)
 }
+
+type IServerState = 'active' | 'stopped'
 
 type IRPCMethod<Req extends IRPCParams = any, Res = any, State = any>
   = (params: Req, connection: RPCConnection<State>) => Res | Promise<Res>
