@@ -69,7 +69,7 @@ Parameters:
 Returns active [connection](#rpcconnection-state--unknown-api) instances.
 
 ---
-### RPCServer.close(): void
+### RPCServer.close(): Promise<void>
 
 Closes all active client's connections and stops the server.
 
