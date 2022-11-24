@@ -104,7 +104,9 @@ class RPCServer<State = unknown> {
 
       try {
         request = RPCRequest.fromBuffer(data, this.options.encoding || 'utf8')
+        this.emit('request', request)
         const response = await this.processRequest(request, connection)
+        this.emit('response', response)
         connection.send(response, this.emitError)
 
       } catch (e) {
@@ -193,6 +195,8 @@ interface IRPCServerEvents {
   listening: null
   connect: RPCConnection
   disconnect: RPCConnection
+  request: RPCRequest
+  response: RPCResponse
   error: unknown
   close: null
 }

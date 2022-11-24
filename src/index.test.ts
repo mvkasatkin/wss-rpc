@@ -69,6 +69,11 @@ describe('Integration client/server', () => {
     const { client } = createClient()
     await client.connected
 
+    const cbOnRequest = jest.fn()
+    const cbOnResponse = jest.fn()
+    server.on('request', cbOnRequest)
+    server.on('response', cbOnResponse)
+
     server.registerMethod('test.method1', (params) => {
       return params[0] + params[1]
     })
@@ -79,6 +84,10 @@ describe('Integration client/server', () => {
 
     const { result: r1 } = await client.call('test.method1', [1, 2])
     expect(r1).toBe(3)
+    expect(cbOnRequest).toBeCalledTimes(1)
+    expect(cbOnRequest.mock.calls[0]).toEqual([{ id: 1, method: 'test.method1', params: [1, 2] }])
+    expect(cbOnResponse).toBeCalledTimes(1)
+    expect(cbOnResponse.mock.calls[0]).toEqual([{ id: 1, result: 3 }])
 
     const { result: r2 } = await client.call<{ sum: number }>('test.method2', { value1: 2, value2: 3 })
     expect(r2?.sum).toBe(5)

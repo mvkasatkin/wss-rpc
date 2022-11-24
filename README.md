@@ -82,6 +82,8 @@ Subscribe a listener to the event. Returns unsubscribe function.
 - `listening (params: empty)` - on server start
 - `connect (params: RPCConnection)` - on client connect
 - `disconnect (params: RPCConnection)` - on client disconnect
+- `request (params: RPCRequest)` - on after request received
+- `response (params: RPCResponse)` - on before response sent
 - `error (params: Error | unknown)` - on server error
 - `close (params: empty)` - on server stop
 
