@@ -146,7 +146,7 @@ describe('Integration client/server', () => {
     const clientErrorCb = jest.fn()
     server.on('error', serverErrorCb)
     client.on('error', clientErrorCb)
-    server.registerMethod('return_rpc_error', () => { return new RPCError(111, 'msg1') })
+    server.registerMethod('return_rpc_error', () => { return new RPCError(111, 'msg1', { some: 'data' }) })
     server.registerMethod('throw_rpc_error', () => { throw new RPCError(222, 'msg2') })
     server.registerMethod('return_error', () => { return new Error('msg3') })
     server.registerMethod('throw_error', () => { throw new Error('msg4') })
@@ -176,7 +176,7 @@ describe('Integration client/server', () => {
 
     response = await client.call('return_rpc_error')
     expect(response.result).toBeUndefined()
-    expect(response.error).toEqual({ code: 111, message: 'msg1' })
+    expect(response.error).toEqual({ code: 111, message: 'msg1', data: { some: 'data' } })
 
     response = await client.call('throw_rpc_error')
     expect(response.result).toBeUndefined()
@@ -276,7 +276,9 @@ describe('Integration client/server', () => {
       client1.call('test'),
       client2.call('test'),
     ])
-    expect(r1.error).toEqual({ code: -10001, message: 'Request timeout' })
+    expect(r1.error).toEqual({ code: -10001, message: 'Request timeout', data: {
+      request: { id: 1, method: 'test' }
+    }})
     expect(r2.result).toEqual(true)
   })
 

@@ -27,11 +27,11 @@ class RPCResponse<T extends any = any> {
   }
 
   public static fromError (e: unknown, request: RPCRequest | null = null) {
-    const { code, message } = e instanceof RPCError ? e : new RPCError(...RPCErrors.INTERNAL_ERROR)
+    const { code, message, data } = e instanceof RPCError ? e : new RPCError(...RPCErrors.INTERNAL_ERROR)
 
     return new RPCResponse({
       id: request?.id || null,
-      error: { code, message },
+      error: data ? { code, message, data } : { code, message },
     })
   }
 }
