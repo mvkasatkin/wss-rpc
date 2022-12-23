@@ -20,6 +20,7 @@ class RPCServer<State = unknown> {
       keepAlive: 300000,
       ...options,
     }
+    this.stateFactory = options.stateFactory
     this.wss = this.options.wss ?? this.createWebsocketServer(onListening)
     this.handleWssListening()
     this.handleWssConnection()
