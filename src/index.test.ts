@@ -1,7 +1,7 @@
 import { RPCServer, IRPCServerOptions } from './lib/RPCServer'
 import { RPCClient, IRPCClientOptions } from './lib/RPCClient'
 import { RPCEvent } from './lib/RPCEvent'
-import { RPCError } from './lib/RPCError'
+import { RPCError, RPCErrors } from './lib/RPCError'
 
 const port = 5005
 let serverData: ReturnType<typeof createServer>
@@ -214,7 +214,7 @@ describe('Integration client/server', () => {
     const activity2 = connection.lastActivity
     expect(activity2).toBeGreaterThan(activity1)
 
-    connection.ws.ping('bbb')
+    connection.ws?.ping('bbb')
     await waitEvent(client.ws, 'ping', 500)
     await waitEvent(connection.ws, 'pong', 500)
     expect(pingCb).toBeCalledTimes(1)
@@ -293,6 +293,22 @@ describe('Integration client/server', () => {
     await server.close()
     expect(cbClose).toBeCalledTimes(1)
     expect(cbError).toBeCalledTimes(0)
+  })
+
+  test('call explicitly', async () => {
+    const { server } = serverData
+    server.registerMethod('test.method1', (params) => params[0] + params[1])
+    server.registerMethod('test.method2', () => new RPCError(...RPCErrors.INVALID_PARAMS))
+    server.registerMethod('test.method3', () => {
+      throw new RPCError(...RPCErrors.INVALID_PARAMS)
+    })
+
+    const result1 = await server.callMethod('test.method1', [1, 2])
+    const result2 = await server.callMethod('test.method2')
+    const result3 = await server.callMethod('test.method3')
+    expect(result1).toBe(3)
+    expect(result2).toBeInstanceOf(RPCError)
+    expect(result3).toBeInstanceOf(RPCError)
   })
 })
 

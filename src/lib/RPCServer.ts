@@ -34,6 +34,25 @@ class RPCServer<State = unknown> {
     this.methods.set(name, method)
   }
 
+  public async callMethod (methodName: string, params?: IRPCParams, connection?: RPCConnection<State>): Promise<any> {
+    const conn = connection ?? new RPCConnection<State>(undefined, this.stateFactory?.())
+    let result: unknown
+    try {
+      const method = this.methods.get(methodName)
+      result = method
+        ? await method(params, conn)
+        : new RPCError(...RPCErrors.METHOD_NOT_FOUND)
+
+    } catch (e) {
+      if (e instanceof RPCError) {
+        result = e
+      } else {
+        throw e
+      }
+    }
+    return result
+  }
+
   public getConnections (): RPCConnection<State>[] {
     return [...this.connections.values()]
   }
@@ -72,7 +91,7 @@ class RPCServer<State = unknown> {
 
   protected onBeforeClose () {
     for (const [, connection] of this.connections) {
-      connection.ws.close()
+      connection.ws?.close()
     }
   }
 
@@ -122,21 +141,7 @@ class RPCServer<State = unknown> {
   }
 
   protected async processRequest (request: RPCRequest, connection: RPCConnection<State>): Promise<RPCResponse> {
-    let result: unknown
-    try {
-      const method = this.methods.get(request.method)
-      result = method
-        ? await method(request.params, connection)
-        : new RPCError(...RPCErrors.METHOD_NOT_FOUND)
-
-    } catch (e) {
-      if (e instanceof RPCError) {
-        result = e
-      } else {
-        throw e
-      }
-    }
-
+    const result = await this.callMethod(request.method, request.params, connection)
     return result instanceof Error
       ? RPCResponse.fromError(result, request)
       : new RPCResponse({ id: request.id || null, result })
@@ -158,7 +163,7 @@ class RPCServer<State = unknown> {
 
     if (this.options.keepAlive) {
       this.keepAlive.set(connection.id, setInterval(() => {
-        connection.ws.ping()
+        connection.ws?.ping()
       }, this.options.keepAlive))
     }
   }

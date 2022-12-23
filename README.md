@@ -64,6 +64,15 @@ Parameters:
 - `method: IRPCMethod` - RPC method function, see [types](#types)
 
 ---
+### RPCServer.callMethod(name: string, params: IRPCParams): Promise\<any>
+
+Call a method explicitly
+
+Parameters:
+- `name: string` - name of the RPC method
+- `params: IRPCParams` - params of the RPC method
+
+---
 ### RPCServer.getConnections(): RPCConnection[]
 
 Returns active [connection](#rpcconnection-state--unknown-api) instances.
