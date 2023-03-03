@@ -62,7 +62,7 @@ class RPCRequest {
   }
 }
 
-type IRPCParams = { [key: string]: unknown } | unknown[]
+type IRPCParams = { [key: string]: any } | unknown[]
 
 interface IRPCRequestObject {
   jsonrpc: '2.0'
