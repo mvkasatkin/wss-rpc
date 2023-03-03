@@ -1,6 +1,6 @@
 {
   "name": "wss-rpc2",
-  "version": "1.0.9",
+  "version": "1.0.1",
   "description": "WebSocket Server and Client implementation of the JSON RPC-2 spec",
   "repository": "github:mvkasatkin/wss-rpc2",
   "source": "src/index.ts",
